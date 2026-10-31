@@ -44,6 +44,7 @@ class TaxType extends Model
             'percent' => 'float',
             'fixed_amount' => 'integer',
             'compound_tax' => 'boolean',
+            'is_default' => 'boolean',
         ];
     }
 

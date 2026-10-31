@@ -4,6 +4,7 @@ namespace App\Adapters\Receivables;
 
 use App\Domains\Receivables\Contracts\PaymentEmailSender;
 use App\Domains\Receivables\Mail\SendPaymentMail;
+use App\Support\Mail\RecipientList;
 use Illuminate\Support\Facades\Mail;
 
 class LaravelPaymentEmailSender implements PaymentEmailSender
@@ -12,12 +13,13 @@ class LaravelPaymentEmailSender implements PaymentEmailSender
     {
         $mail = Mail::to($data['to']);
 
-        if (! empty($data['cc'])) {
-            $mail->cc($data['cc']);
+        // CC and BCC arrive as one typed list ("a@x.com, b@y.com")
+        if ($cc = RecipientList::parse($data['cc'] ?? null)) {
+            $mail->cc($cc);
         }
 
-        if (! empty($data['bcc'])) {
-            $mail->bcc($data['bcc']);
+        if ($bcc = RecipientList::parse($data['bcc'] ?? null)) {
+            $mail->bcc($bcc);
         }
 
         $mail->send(new SendPaymentMail($data));

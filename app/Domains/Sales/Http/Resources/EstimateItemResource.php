@@ -35,6 +35,7 @@ class EstimateItemResource extends JsonResource
             'discount' => $item->discount,
             'discount_val' => $item->discount_val,
             'price' => $item->price,
+            'zero_rated' => (bool) $item->zero_rated,
             'tax' => $item->tax,
             'total' => $item->total,
             'item_id' => $item->item_id,

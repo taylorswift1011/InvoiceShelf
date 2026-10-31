@@ -23,6 +23,7 @@ export interface Item {
   created_at: string
   updated_at: string
   tax_per_item: string | null
+  zero_rated: boolean
   formatted_created_at: string
   unit?: Unit
   company?: Company

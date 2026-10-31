@@ -5,11 +5,12 @@ namespace App\Domains\Sales\Application\Composition;
 use App\Domains\Accounts\Models\CompanySetting;
 use App\Domains\Sales\Models\Estimate;
 use App\Platform\Mail\Contracts\MailConfigurator;
+use App\Support\Mail\RecipientList;
 use App\Support\SpaTranslations;
 
 /**
  * What the send estimate dialog prefills, keyed the way the send endpoint takes
- * it: the configured sender, the customer's address, the translated
+ * it: the configured sender, the customer's address and saved CC/BCC addresses, the translated
  * "New Estimate" subject and the company's estimate mail body.
  */
 final class EstimateMailDefaults
@@ -19,15 +20,15 @@ final class EstimateMailDefaults
     ) {}
 
     /**
-     * @return array{from: mixed, to: string|null, cc: null, bcc: null, subject: string, body: string|null}
+     * @return array{from: mixed, to: string|null, cc: string|null, bcc: string|null, subject: string, body: string|null}
      */
     public function for(Estimate $estimate, string $locale): array
     {
         return [
             'from' => $this->mailConfigurator->getDefaultConfig()['from_mail'] ?? null,
             'to' => $estimate->customer?->email,
-            'cc' => null,
-            'bcc' => null,
+            'cc' => RecipientList::format($estimate->customer?->cc_emails),
+            'bcc' => RecipientList::format($estimate->customer?->bcc_emails),
             'subject' => SpaTranslations::get($locale, 'estimates.new_estimate'),
             'body' => CompanySetting::getSetting('estimate_mail_body', $estimate->company_id),
         ];

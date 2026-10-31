@@ -65,6 +65,12 @@ class TaxTypeRequest extends FormRequest
                 'sometimes',
                 'boolean',
             ],
+            // Added to every new invoice and estimate when the company taxes
+            // whole documents; only a sales tax can be one (checked below).
+            'is_default' => [
+                'sometimes',
+                'boolean',
+            ],
             'collective_tax' => [
                 'nullable',
             ],
@@ -111,6 +117,16 @@ class TaxTypeRequest extends FormRequest
                     'compound_tax',
                     'Compound tax is only available for percentage sales taxes.'
                 );
+            }
+        });
+
+        $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty() || ! $this->boolean('is_default')) {
+                return;
+            }
+
+            if ($this->settledValue('transaction_type', TaxType::TRANSACTION_TYPE_SALES) !== TaxType::TRANSACTION_TYPE_SALES) {
+                $validator->errors()->add('is_default', 'Only a sales tax can be added to new documents by default.');
             }
         });
 

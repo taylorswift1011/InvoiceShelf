@@ -55,6 +55,7 @@ function createRecurringInvoiceItemStub(): DocumentItem {
   return {
     id: generateClientId(),
     item_id: null,
+    zero_rated: false,
     name: '',
     description: null,
     quantity: 1,

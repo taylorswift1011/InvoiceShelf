@@ -14,6 +14,8 @@ export interface Customer {
   id: number
   name: string
   email: string | null
+  cc_emails?: string[]
+  bcc_emails?: string[]
   phone: string | null
   contact_name: string | null
   company_name: string | null
@@ -48,6 +50,8 @@ export interface CreateCustomerPayload {
   name: string
   contact_name?: string
   email?: string
+  cc_emails?: string | string[]
+  bcc_emails?: string | string[]
   phone?: string | null
   password?: string
   confirm_password?: string

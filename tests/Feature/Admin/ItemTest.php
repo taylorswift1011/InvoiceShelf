@@ -192,3 +192,44 @@ test('create item with fixed amount tax', function () {
         'fixed_amount' => 5000,
     ]);
 });
+
+test('a zero-rated item gets the company zero-rated tax and no other', function () {
+    $companyId = User::find(1)->companies()->first()->id;
+    $other = TaxType::factory()->create(['company_id' => $companyId]);
+
+    $response = postJson('api/v1/items', [
+        'name' => 'Exported goods',
+        'price' => 1000,
+        'zero_rated' => true,
+        'taxes' => [Tax::factory()->raw(['tax_type_id' => $other->id])],
+    ])->assertOk()->assertJsonPath('data.zero_rated', true);
+
+    $zeroRated = TaxType::query()
+        ->where('company_id', $companyId)
+        ->where('tax_category_code', TaxType::TAX_CATEGORY_CODE_ZERO_RATED)
+        ->sole();
+
+    expect((float) $zeroRated->percent)->toBe(0.0);
+
+    $taxes = Item::find($response->json('data.id'))->taxes;
+    expect($taxes)->toHaveCount(1)
+        ->and($taxes->first()->tax_type_id)->toBe($zeroRated->id);
+});
+
+test('zero-rating reuses the tax type and can be switched off again', function () {
+    $companyId = User::find(1)->companies()->first()->id;
+
+    $first = postJson('api/v1/items', ['name' => 'A', 'price' => 1, 'zero_rated' => true])->assertOk();
+    postJson('api/v1/items', ['name' => 'B', 'price' => 1, 'zero_rated' => true])->assertOk();
+
+    expect(TaxType::query()
+        ->where('company_id', $companyId)
+        ->where('tax_category_code', TaxType::TAX_CATEGORY_CODE_ZERO_RATED)
+        ->count())->toBe(1);
+
+    putJson('api/v1/items/'.$first->json('data.id'), [
+        'name' => 'A', 'price' => 1, 'zero_rated' => false, 'taxes' => [],
+    ])->assertOk()->assertJsonPath('data.zero_rated', false);
+
+    expect(Item::find($first->json('data.id'))->taxes)->toHaveCount(0);
+});

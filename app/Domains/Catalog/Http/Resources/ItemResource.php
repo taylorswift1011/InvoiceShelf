@@ -39,6 +39,7 @@ class ItemResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'tax_per_item' => $this->tax_per_item,
+            'zero_rated' => (bool) $this->zero_rated,
             'formatted_created_at' => $this->formattedCreatedAt,
             // Loaded by the caller: the listing eager-loads it, so asking
             // the database per row would undo that.

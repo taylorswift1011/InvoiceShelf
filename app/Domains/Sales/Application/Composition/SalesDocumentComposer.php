@@ -149,6 +149,7 @@ class SalesDocumentComposer
                 'discount' => $line['discount'],
                 'discount_type' => $line['discount_type'],
                 'taxes' => $line['rates'],
+                'zero_rated' => $line['zero_rated'] ?? false,
             ], $lines),
             $documentRates,
             $discount,
@@ -465,6 +466,7 @@ class SalesDocumentComposer
 
             $lines[] = [
                 'item_id' => $item?->id,
+                'zero_rated' => (bool) $item?->zero_rated,
                 'name' => $name,
                 'description' => array_key_exists('description', $line) ? $line['description'] : $item?->description,
                 'unit_name' => $line['unit'] ?? $item?->unit?->name,
@@ -498,6 +500,7 @@ class SalesDocumentComposer
             'price' => (int) $item->price,
             'discount' => $type === 'fixed' ? $item->discount / 100 : $item->discount + 0,
             'discount_type' => $type,
+            'zero_rated' => (bool) $item->zero_rated,
             'rates' => $item->taxes->map(fn (Tax $tax) => $this->snapshot($tax))->values()->all(),
             'custom_fields' => $item->fields
                 ->map(fn ($answer) => ['id' => $answer->custom_field_id, 'value' => $answer->defaultAnswer])

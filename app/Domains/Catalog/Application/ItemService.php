@@ -21,6 +21,8 @@ class ItemService
      */
     public function create(array $attributes, array $taxes, int $companyId, int $creatorId, ?iterable $customFields = null): Item
     {
+        $taxes = $this->taxesFor($attributes, $taxes, $companyId);
+
         $attributes['company_id'] = $companyId;
         $attributes['creator_id'] = $creatorId;
         $attributes['currency_id'] = CompanySetting::getSetting('currency', $companyId);
@@ -43,6 +45,8 @@ class ItemService
      */
     public function update(Item $item, array $attributes, array $taxes, int $companyId, ?iterable $customFields = null): Item
     {
+        $taxes = $this->taxesFor($attributes, $taxes, $companyId);
+
         $item->update($attributes);
 
         $this->itemTaxManager->replace($item, $taxes, $companyId);
@@ -52,5 +56,20 @@ class ItemService
         }
 
         return Item::query()->with(['taxes', 'fields'])->findOrFail($item->getKey());
+    }
+
+    /**
+     * A zero-rated item carries the zero-rated tax and nothing else,
+     * whatever taxes were sent with it.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  array<int, array<string, mixed>>  $taxes
+     * @return array<int, array<string, mixed>>
+     */
+    private function taxesFor(array $attributes, array $taxes, int $companyId): array
+    {
+        return ! empty($attributes['zero_rated'])
+            ? $this->itemTaxManager->zeroRated($companyId)
+            : $taxes;
     }
 }

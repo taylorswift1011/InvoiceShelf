@@ -13,6 +13,7 @@ import {
   requiredIf,
 } from '@vuelidate/validators'
 import useVuelidate from '@vuelidate/core'
+import { isEmailList } from '@/scripts/utils/email-list'
 import { useCustomerStore } from '../store'
 import { useGlobalStore } from '../../../../stores/global.store'
 import { useCompanyStore } from '../../../../stores/company.store'
@@ -78,6 +79,12 @@ const rules = computed(() => ({
         requiredIf(customerStore.currentCustomer.enable_portal === true)
       ),
       email: helpers.withMessage(t('validation.email_incorrect'), email),
+    },
+    cc_emails: {
+      emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
+    },
+    bcc_emails: {
+      emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
     },
     password: {
       required: helpers.withMessage(
@@ -255,6 +262,46 @@ async function submitCustomerData(): Promise<void> {
                 name="email"
                 :invalid="v$.currentCustomer.email.$error"
                 @input="v$.currentCustomer.email.$touch()"
+              />
+            </BaseInputGroup>
+
+            <BaseInputGroup
+              :error="
+                v$.currentCustomer.cc_emails.$error &&
+                v$.currentCustomer.cc_emails.$errors[0].$message
+              "
+              :content-loading="isFetchingInitialData"
+              :label="$t('customers.cc_emails')"
+              :help-text="$t('customers.cc_emails_description')"
+            >
+              <BaseInput
+                v-model.trim="customerStore.currentCustomer.cc_emails"
+                :content-loading="isFetchingInitialData"
+                type="text"
+                name="cc_emails"
+                :placeholder="$t('customers.email_list_placeholder')"
+                :invalid="v$.currentCustomer.cc_emails.$error"
+                @input="v$.currentCustomer.cc_emails.$touch()"
+              />
+            </BaseInputGroup>
+
+            <BaseInputGroup
+              :error="
+                v$.currentCustomer.bcc_emails.$error &&
+                v$.currentCustomer.bcc_emails.$errors[0].$message
+              "
+              :content-loading="isFetchingInitialData"
+              :label="$t('customers.bcc_emails')"
+              :help-text="$t('customers.bcc_emails_description')"
+            >
+              <BaseInput
+                v-model.trim="customerStore.currentCustomer.bcc_emails"
+                :content-loading="isFetchingInitialData"
+                type="text"
+                name="bcc_emails"
+                :placeholder="$t('customers.email_list_placeholder')"
+                :invalid="v$.currentCustomer.bcc_emails.$error"
+                @input="v$.currentCustomer.bcc_emails.$touch()"
               />
             </BaseInputGroup>
 

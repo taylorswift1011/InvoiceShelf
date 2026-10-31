@@ -26,6 +26,18 @@
         :value="selectedViewCustomer?.email"
       />
       <BaseDescriptionListItem
+        v-if="selectedViewCustomer.cc_emails?.length"
+        :content-loading="contentLoading"
+        :label="$t('customers.cc_emails')"
+        :value="formatEmailList(selectedViewCustomer.cc_emails)"
+      />
+      <BaseDescriptionListItem
+        v-if="selectedViewCustomer.bcc_emails?.length"
+        :content-loading="contentLoading"
+        :label="$t('customers.bcc_emails')"
+        :value="formatEmailList(selectedViewCustomer.bcc_emails)"
+      />
+      <BaseDescriptionListItem
         :content-loading="contentLoading"
         :label="$t('wizard.currency')"
         :value="
@@ -102,6 +114,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCustomerStore } from '../store'
+import { formatEmailList } from '@/scripts/utils/email-list'
 
 const customerStore = useCustomerStore()
 

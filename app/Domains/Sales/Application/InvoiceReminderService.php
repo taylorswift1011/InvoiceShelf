@@ -10,6 +10,7 @@ use App\Domains\Sales\Events\InvoiceReminderSent;
 use App\Domains\Sales\Models\Invoice;
 use App\Domains\Sales\Models\InvoiceReminder;
 use App\Platform\Mail\Contracts\MailConfigurator;
+use App\Support\Mail\RecipientList;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -306,6 +307,8 @@ class InvoiceReminderService
             $this->emailSender->send([
                 'from' => config('mail.from.address'),
                 'to' => $invoice->customer->email,
+                'cc' => RecipientList::format($invoice->customer->cc_emails),
+                'bcc' => RecipientList::format($invoice->customer->bcc_emails),
                 'subject' => $invoice->getEmailString($settings->subject),
                 'body' => $invoice->getEmailString($settings->body),
                 'invoice' => $invoice->toArray(),

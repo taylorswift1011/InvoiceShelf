@@ -5,6 +5,7 @@ namespace App\Adapters\Sales;
 use App\Domains\Sales\Contracts\InvoiceEmailSender;
 use App\Domains\Sales\Mail\SendCreditNoteMail;
 use App\Domains\Sales\Mail\SendInvoiceMail;
+use App\Support\Mail\RecipientList;
 use Illuminate\Support\Facades\Mail;
 
 class LaravelInvoiceEmailSender implements InvoiceEmailSender
@@ -13,12 +14,13 @@ class LaravelInvoiceEmailSender implements InvoiceEmailSender
     {
         $mail = Mail::to($data['to']);
 
-        if (! empty($data['cc'])) {
-            $mail->cc($data['cc']);
+        // CC and BCC arrive as one typed list ("a@x.com, b@y.com")
+        if ($cc = RecipientList::parse($data['cc'] ?? null)) {
+            $mail->cc($cc);
         }
 
-        if (! empty($data['bcc'])) {
-            $mail->bcc($data['bcc']);
+        if ($bcc = RecipientList::parse($data['bcc'] ?? null)) {
+            $mail->bcc($bcc);
         }
 
         $mail->send($creditNote

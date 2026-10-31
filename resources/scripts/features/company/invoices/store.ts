@@ -23,6 +23,8 @@ import type { Note } from '../../../types/domain/note'
 import type { CustomFieldValue } from '../../../types/domain/custom-field'
 import type { DocumentTax, DocumentItem } from '../../shared/document-form/use-document-calculations'
 import { generateClientId } from '../../../utils'
+import { fetchDefaultNote } from '../../shared/document-form/default-note'
+import { fetchDefaultDocumentTaxes } from '../../shared/document-form/default-taxes'
 
 // ----------------------------------------------------------------
 // Stub factories
@@ -47,6 +49,7 @@ function createInvoiceItemStub(): DocumentItem {
     id: generateClientId(),
     invoice_id: null,
     item_id: null,
+    zero_rated: false,
     name: '',
     description: null,
     quantity: 1,
@@ -555,6 +558,16 @@ export const useInvoiceStore = defineStore('invoice', {
         ])
 
         if (!isEdit) {
+          // A new invoice starts with the note marked default for its type
+          if (!this.newInvoice.notes) {
+            this.newInvoice.notes = (await fetchDefaultNote('Invoice')) ?? this.newInvoice.notes
+          }
+
+          // ...and, when the company taxes whole documents, its default taxes (GST)
+          if (this.newInvoice.tax_per_item !== 'YES' && !this.newInvoice.taxes.length) {
+            this.newInvoice.taxes = await fetchDefaultDocumentTaxes()
+          }
+
           if (nextNumRes?.data?.nextNumber) {
             this.newInvoice.invoice_number = nextNumRes.data.nextNumber
           }

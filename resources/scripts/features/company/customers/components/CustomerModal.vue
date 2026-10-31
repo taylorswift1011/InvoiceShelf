@@ -13,6 +13,7 @@ import {
   sameAs,
 } from '@vuelidate/validators'
 import useVuelidate from '@vuelidate/core'
+import { isEmailList } from '@/scripts/utils/email-list'
 import { useModalStore } from '../../../../stores/modal.store'
 import { useCustomerStore } from '../store'
 import { useCompanyStore } from '../../../../stores/company.store'
@@ -82,6 +83,12 @@ const rules = computed(() => ({
       requiredIf(customerStore.currentCustomer.enable_portal === true)
     ),
     email: helpers.withMessage(t('validation.email_incorrect'), email),
+  },
+  cc_emails: {
+    emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
+  },
+  bcc_emails: {
+    emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
   },
   prefix: {
     minLength: helpers.withMessage(
@@ -276,6 +283,38 @@ function closeCustomerModal(): void {
                   class="mt-1 md:mt-0"
                   :invalid="v$.email.$error"
                   @input="v$.email.$touch()"
+                />
+              </BaseInputGroup>
+
+              <BaseInputGroup
+                :label="$t('customers.cc_emails')"
+                :help-text="$t('customers.cc_emails_description')"
+                :error="v$.cc_emails.$error && v$.cc_emails.$errors[0].$message"
+              >
+                <BaseInput
+                  v-model.trim="customerStore.currentCustomer.cc_emails"
+                  type="text"
+                  name="cc_emails"
+                  class="mt-1 md:mt-0"
+                  :placeholder="$t('customers.email_list_placeholder')"
+                  :invalid="v$.cc_emails.$error"
+                  @input="v$.cc_emails.$touch()"
+                />
+              </BaseInputGroup>
+
+              <BaseInputGroup
+                :label="$t('customers.bcc_emails')"
+                :help-text="$t('customers.bcc_emails_description')"
+                :error="v$.bcc_emails.$error && v$.bcc_emails.$errors[0].$message"
+              >
+                <BaseInput
+                  v-model.trim="customerStore.currentCustomer.bcc_emails"
+                  type="text"
+                  name="bcc_emails"
+                  class="mt-1 md:mt-0"
+                  :placeholder="$t('customers.email_list_placeholder')"
+                  :invalid="v$.bcc_emails.$error"
+                  @input="v$.bcc_emails.$touch()"
                 />
               </BaseInputGroup>
 

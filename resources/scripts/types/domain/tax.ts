@@ -51,6 +51,8 @@ export interface TaxType {
   transaction_type: TaxTypeTransactionType
   type: TaxTypeCategory
   compound_tax: boolean
+  /** Added to every new invoice and estimate under document-level tax. */
+  is_default?: boolean
   collective_tax: number | null
   tax_category_code: TaxCategoryCode
   tax_exemption_reason: string | null

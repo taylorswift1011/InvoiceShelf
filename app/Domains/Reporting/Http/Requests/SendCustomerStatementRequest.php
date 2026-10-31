@@ -3,6 +3,7 @@
 namespace App\Domains\Reporting\Http\Requests;
 
 use App\Domains\Reporting\Queries\CustomerStatementQuery;
+use App\Rules\EmailList;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -34,8 +35,9 @@ class SendCustomerStatementRequest extends FormRequest
             'subject' => ['required', 'string'],
             'body' => ['required', 'string'],
             'to' => ['required', 'email'],
-            'cc' => ['nullable', 'email'],
-            'bcc' => ['nullable', 'email'],
+            // One or more addresses, separated by commas, semicolons or line breaks
+            'cc' => ['nullable', new EmailList],
+            'bcc' => ['nullable', new EmailList],
         ];
     }
 
