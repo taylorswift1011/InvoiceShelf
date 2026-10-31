@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 
 /**
@@ -75,4 +76,18 @@ test('a file that is not a JSON object stops the run', function () {
 
     expect($code)->toBe(2)
         ->and($output)->toContain('fr.json is not a JSON object');
+});
+
+test('English strings write a literal @ the way vue-i18n needs it', function () {
+    // vue-i18n reads a bare "@" as the start of a linked message and throws
+    // SyntaxError 10 while rendering, which takes the component down with it.
+    // A literal one is written {'@'}.
+    $strings = Arr::dot(json_decode(File::get(base_path('lang/en.json')), true));
+
+    $bare = array_filter(
+        $strings,
+        fn ($value) => is_string($value) && str_contains(str_replace("{'@'}", '', $value), '@'),
+    );
+
+    expect(array_keys($bare))->toBe([]);
 });

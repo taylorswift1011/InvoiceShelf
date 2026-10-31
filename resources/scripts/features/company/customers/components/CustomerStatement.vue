@@ -140,8 +140,8 @@
       <form @submit.prevent="sendStatement">
         <div class="p-6 space-y-4">
           <BaseInputGroup :label="$t('general.to')" required><BaseInput v-model="emailForm.to" type="email" /></BaseInputGroup>
-          <BaseInputGroup :label="$t('general.cc')"><BaseInput v-model="emailForm.cc" type="email" /></BaseInputGroup>
-          <BaseInputGroup :label="$t('general.bcc')"><BaseInput v-model="emailForm.bcc" type="email" /></BaseInputGroup>
+          <BaseInputGroup :label="$t('general.cc')" :help-text="$t('customers.email_list_hint')" :error="emailListError(emailForm.cc)"><BaseInput v-model="emailForm.cc" type="text" :invalid="!!emailListError(emailForm.cc)" /></BaseInputGroup>
+          <BaseInputGroup :label="$t('general.bcc')" :help-text="$t('customers.email_list_hint')" :error="emailListError(emailForm.bcc)"><BaseInput v-model="emailForm.bcc" type="text" :invalid="!!emailListError(emailForm.bcc)" /></BaseInputGroup>
           <BaseInputGroup :label="$t('general.subject')" required><BaseInput v-model="emailForm.subject" /></BaseInputGroup>
           <BaseInputGroup :label="$t('general.body')" required><BaseTextarea v-model="emailForm.body" /></BaseInputGroup>
         </div>
@@ -174,6 +174,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatEmailList, isEmailList } from '@/scripts/utils/email-list'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { customerService, type CustomerStatement, type CustomerStatementParams } from '@/scripts/api/services/customer.service'
@@ -207,6 +208,11 @@ const creditPayments = ref<Payment[]>([])
 const openInvoices = ref<Invoice[]>([])
 const creditRows = ref<Array<{ payment_id: number; invoice_id: number; amount: number }>>([])
 const emailForm = reactive({ to: '', cc: '', bcc: '', subject: '', body: '' })
+
+/** An error message for a CC/BCC field holding an address that is not valid, else undefined. */
+function emailListError(value: string): string | undefined {
+  return isEmailList(value) ? undefined : t('validation.email_list_incorrect')
+}
 const statementTypes = computed(() => [
   { label: t('customers.account_activity'), value: 'activity' },
   { label: t('customers.outstanding_items'), value: 'outstanding' },
@@ -273,6 +279,7 @@ function changeActivityPage(page: number): void {
 
 async function sendStatement(): Promise<void> {
   if (!emailForm.to || !emailForm.subject || !emailForm.body) return
+  if (emailListError(emailForm.cc) || emailListError(emailForm.bcc)) return
   isSending.value = true
   try {
     await customerService.sendStatement(props.customer.id, { ...statementParams.value, ...emailForm })
@@ -287,6 +294,8 @@ async function sendStatement(): Promise<void> {
 
 function openEmailModal(): void {
   emailForm.to = props.customer.email ?? ''
+  emailForm.cc = formatEmailList(props.customer.cc_emails)
+  emailForm.bcc = formatEmailList(props.customer.bcc_emails)
   emailForm.subject = t('customers.statement')
   emailForm.body = t('customers.statement_email_body')
   showEmailModal.value = true

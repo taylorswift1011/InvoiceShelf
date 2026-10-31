@@ -2,6 +2,7 @@
 
 namespace App\Domains\Sales\Application;
 
+use App\Domains\Catalog\Models\Item;
 use App\Domains\Metadata\Contracts\CustomFieldValueWriter;
 use App\Support\DocumentTotals;
 use App\Support\MoneyConversion;
@@ -24,6 +25,34 @@ class DocumentItemService
     ];
 
     /**
+     * Ids of the company's zero-rated catalogue items among the lines. A
+     * line from one of them is zero-rated: under document-level tax, the
+     * document's taxes are charged on the other lines only.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return list<int>
+     */
+    private function zeroRatedItemIds(array $items, int $companyId): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map(
+            fn ($item) => is_array($item) && ! empty($item['item_id']) ? (int) $item['item_id'] : null,
+            $items,
+        ))));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        return Item::query()
+            ->where('company_id', $companyId)
+            ->whereIn('id', $ids)
+            ->where('zero_rated', true)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
      * Persist the line items of a document.
      *
      * $recompute = false is for callers that have already decided every cent of
@@ -37,10 +66,13 @@ class DocumentItemService
     public function createItems(Model $document, array $items, bool $recompute = true): void
     {
         $exchangeRate = $document->exchange_rate;
+        $zeroRated = $this->zeroRatedItemIds($items, (int) $document->company_id);
 
         foreach ($items as $item) {
             $item['company_id'] = $document->company_id;
             $item['exchange_rate'] = $exchangeRate;
+            // Decided here from the catalogue, never taken from the client
+            $item['zero_rated'] = isset($item['item_id']) && in_array((int) $item['item_id'], $zeroRated, true);
 
             if ($recompute) {
                 // Recompute the item total from price/quantity so a tampered item

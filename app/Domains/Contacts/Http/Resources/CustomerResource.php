@@ -5,6 +5,7 @@ namespace App\Domains\Contacts\Http\Resources;
 use App\Domains\Accounts\Http\Resources\CompanyResource;
 use App\Domains\Metadata\Http\Resources\CustomFieldValueResource;
 use App\Domains\Money\Http\Resources\CurrencyResource;
+use App\Support\Mail\RecipientList;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,8 @@ class CustomerResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'cc_emails' => RecipientList::parse($this->cc_emails),
+            'bcc_emails' => RecipientList::parse($this->bcc_emails),
             'phone' => $this->phone,
             'contact_name' => $this->contact_name,
             'company_name' => $this->company_name,

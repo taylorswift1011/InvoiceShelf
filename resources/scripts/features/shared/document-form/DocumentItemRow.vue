@@ -19,6 +19,13 @@
         @select="onSelectItem"
         @update:description="updateItemAttribute('description', $event)"
       />
+      <BaseBadge
+        v-if="itemData.zero_rated && formData.tax_per_item !== 'YES'"
+        class="mt-1 text-xs"
+        :title="$t('items.zero_rated_description')"
+      >
+        {{ $t('items.zero_rated') }}
+      </BaseBadge>
 
       <BaseDropdown
         v-if="invoiceItems.length > 1"
@@ -222,6 +229,13 @@
                   @select="onSelectItem"
                   @update:description="updateItemAttribute('description', $event)"
                 />
+                <BaseBadge
+                  v-if="itemData.zero_rated && formData.tax_per_item !== 'YES'"
+                  class="mt-1 text-xs"
+                  :title="$t('items.zero_rated_description')"
+                >
+                  {{ $t('items.zero_rated') }}
+                </BaseBadge>
               </div>
             </td>
 
@@ -715,6 +729,8 @@ function onSelectItem(itm: Record<string, unknown>): void {
     item.name = itm.name as string
     item.price = itm.price as number
     item.item_id = itm.id as number
+    // Under document-level tax a zero-rated item is left out of the document's taxes
+    item.zero_rated = Boolean(itm.zero_rated)
     item.description = (itm.description as string | null) ?? null
 
     if (itm.unit) {

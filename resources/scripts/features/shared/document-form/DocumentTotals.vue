@@ -248,7 +248,7 @@ import { ABILITIES } from '../../../config/abilities'
 import type { Currency } from '../../../types/domain/currency'
 import type { TaxType } from '../../../types/domain/tax'
 import type { DocumentFormData, DocumentTax, DocumentStore, DocumentItem } from './use-document-calculations'
-import { calcTaxAmount } from './use-document-calculations'
+import { calcTaxAmount, documentTaxBase } from './use-document-calculations'
 
 interface Props {
   store: DocumentStore & {
@@ -395,10 +395,16 @@ function setDiscount(): void {
   formData.value.discount_val = Math.round(newValue * 100)
 }
 
+/** The discounted subtotal of the lines that are not zero-rated. */
+const taxableBase = computed<number>(() =>
+  documentTaxBase(formData.value.items, props.store.getSubTotal, formData.value.discount_val ?? 0),
+)
+
 function recalculateGlobalTaxes(): void {
   if (formData.value.tax_per_item === 'YES') return
 
-  const subtotalWithDiscount = props.store.getSubtotalWithDiscount
+  // Zero-rated lines are left out of document-level taxes
+  const subtotalWithDiscount = taxableBase.value
   const taxIncluded = formData.value.tax_included ?? false
 
   // Pass 1: simple (non-compound) taxes are charged on the discounted subtotal.
@@ -452,7 +458,7 @@ function onSelectTax(selectedTax: TaxType): void {
   upsertAvailableTaxType(selectedTax)
 
   const amount = calcTaxAmount(
-    props.store.getSubtotalWithDiscount,
+    taxableBase.value,
     selectedTax.percent,
     selectedTax.fixed_amount,
     selectedTax.calculation_type,

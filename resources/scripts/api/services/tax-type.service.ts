@@ -27,6 +27,7 @@ export interface CreateTaxTypePayload {
   calculation_type?: string | null
   transaction_type: TaxTypeTransactionType
   compound_tax?: boolean
+  is_default?: boolean
   collective_tax?: number | null
   tax_category_code?: TaxCategoryCode
   tax_exemption_reason?: string | null

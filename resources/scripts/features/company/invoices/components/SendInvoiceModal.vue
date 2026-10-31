@@ -44,6 +44,7 @@
 
           <BaseInputGroup
             :label="$t('general.cc')"
+            :help-text="$t('customers.email_list_hint')"
             :error="
               v$.cc.$error ? (v$.cc.$errors[0]?.$message as string) : undefined
             "
@@ -59,6 +60,7 @@
 
           <BaseInputGroup
             :label="$t('general.bcc')"
+            :help-text="$t('customers.email_list_hint')"
             :error="
               v$.bcc.$error ? (v$.bcc.$errors[0]?.$message as string) : undefined
             "
@@ -198,6 +200,7 @@ import { useCompanyStore } from '../../../../stores/company.store'
 import { useNotificationStore } from '../../../../stores/notification.store'
 import { useInvoiceStore } from '../store'
 import { emailPreviewUrl } from '@/scripts/utils/email-preview'
+import { formatEmailList, isEmailList } from '@/scripts/utils/email-list'
 
 interface InvoiceMailForm {
   id: number | string | null
@@ -261,10 +264,10 @@ const rules = computed(() => ({
     email: helpers.withMessage(t('validation.email_incorrect'), email),
   },
   cc: {
-    email: helpers.withMessage(t('validation.email_incorrect'), email),
+    emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
   },
   bcc: {
-    email: helpers.withMessage(t('validation.email_incorrect'), email),
+    emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
   },
   subject: {
     required: helpers.withMessage(t('validation.required'), required),
@@ -293,6 +296,8 @@ async function setInitialData(): Promise<void> {
     if (modalData.value?.customer) {
       const customer = modalData.value.customer as Record<string, unknown>
       form.to = (customer.email as string) ?? null
+      form.cc = formatEmailList(customer.cc_emails as string[] | undefined) || null
+      form.bcc = formatEmailList(customer.bcc_emails as string[] | undefined) || null
     }
 
     form.body = companyStore.selectedCompanySettings.invoice_mail_body ?? null

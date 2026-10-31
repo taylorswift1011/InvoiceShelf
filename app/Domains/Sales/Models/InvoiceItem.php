@@ -56,6 +56,7 @@ class InvoiceItem extends Model
             'quantity' => 'float',
             'discount_val' => 'integer',
             'tax' => 'integer',
+            'zero_rated' => 'boolean',
         ];
     }
 

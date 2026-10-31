@@ -18,6 +18,8 @@ export interface DocumentItem {
   totalCompoundTax?: number
   taxes?: Partial<Tax>[]
   item_id?: number | null
+  /** From a zero-rated catalogue item: left out of document-level taxes. */
+  zero_rated?: boolean
   unit_name?: string | null
   invoice_id?: number | null
   estimate_id?: number | null
@@ -151,6 +153,30 @@ export function useDocumentCalculations(options: UseDocumentCalculationsOptions)
     netTotal,
     total,
   }
+}
+
+/**
+ * What document-level taxes are charged on: the lines that are not
+ * zero-rated, less their proportional share of the document discount. With
+ * no zero-rated line this is exactly the discounted subtotal. Mirrors
+ * `App\Support\DocumentTaxes::taxableBase()` on the server.
+ */
+export function documentTaxBase(
+  items: Pick<DocumentItem, 'total' | 'zero_rated'>[],
+  subTotal: number,
+  discountVal: number,
+): number {
+  const taxable = items.reduce((sum, item) => sum + (item.zero_rated ? 0 : (item.total ?? 0)), 0)
+
+  if (taxable === subTotal) {
+    return subTotal - discountVal
+  }
+
+  if (subTotal === 0) {
+    return 0
+  }
+
+  return taxable - Math.round((discountVal * taxable) / subTotal)
 }
 
 /** Calculate item-level subtotal (price * quantity) */

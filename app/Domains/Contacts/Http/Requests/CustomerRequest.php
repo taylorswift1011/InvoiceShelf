@@ -4,7 +4,9 @@ namespace App\Domains\Contacts\Http\Requests;
 
 use App\Domains\Contacts\Models\Address;
 use App\Domains\Metadata\Http\Requests\Concerns\ValidatesCustomFields;
+use App\Rules\EmailList;
 use App\Rules\IdnEmail;
+use App\Support\Mail\RecipientList;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
@@ -44,6 +46,17 @@ class CustomerRequest extends FormRequest
         'estimate_prefix',
         'payment_prefix',
         'invoice_prefix',
+        'cc_emails',
+        'bcc_emails',
+    ];
+
+    /**
+     * Addresses copied on every email sent to the contact (send dialogs
+     * prefill them, automatic sends include them).
+     */
+    private const RECIPIENT_LIST_FIELDS = [
+        'cc_emails',
+        'bcc_emails',
     ];
 
     /** Optional and unchecked — declared only so the payload is not rejected. */
@@ -100,6 +113,10 @@ class CustomerRequest extends FormRequest
         $rules['reminders_paused'] = ['sometimes', 'boolean'];
         $rules['currency_id'] = ['nullable'];
 
+        foreach (self::RECIPIENT_LIST_FIELDS as $field) {
+            $rules[$field] = ['sometimes', 'nullable', new EmailList];
+        }
+
         foreach (['billing', 'shipping'] as $block) {
             foreach (self::ADDRESS_FIELDS as $field) {
                 $rules[$block.'.'.$field] = ['nullable'];
@@ -123,6 +140,14 @@ class CustomerRequest extends FormRequest
     public function customerAttributes(): array
     {
         $attributes = Arr::only($this->validated(), self::PERSISTED_FIELDS);
+
+        // Sent as a typed list or an array; kept as an array, null when empty.
+        // Left out of the payload, the saved list stays as it is.
+        foreach (self::RECIPIENT_LIST_FIELDS as $field) {
+            if (array_key_exists($field, $attributes)) {
+                $attributes[$field] = RecipientList::parse($attributes[$field]) ?: null;
+            }
+        }
 
         $attributes['creator_id'] = $this->user()->id;
         $attributes['company_id'] = $this->header('company');

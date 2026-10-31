@@ -9,6 +9,7 @@ use App\Domains\Reporting\Queries\CustomerStatementQuery;
 use App\Domains\Reporting\Rendering\CustomerStatementPdfRenderer;
 use App\Platform\Http\Controller;
 use App\Platform\Mail\Contracts\MailConfigurator;
+use App\Support\Mail\RecipientList;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
@@ -40,11 +41,11 @@ class SendCustomerStatementController extends Controller
         $this->mailConfigurator->applyCompanyConfig($customer->company_id);
 
         $mail = Mail::to($request->validated('to'));
-        if ($request->filled('cc')) {
-            $mail->cc($request->validated('cc'));
+        if ($cc = RecipientList::parse($request->validated('cc'))) {
+            $mail->cc($cc);
         }
-        if ($request->filled('bcc')) {
-            $mail->bcc($request->validated('bcc'));
+        if ($bcc = RecipientList::parse($request->validated('bcc'))) {
+            $mail->bcc($bcc);
         }
 
         $mail->send(new SendCustomerStatementMail([

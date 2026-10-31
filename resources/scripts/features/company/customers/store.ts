@@ -12,6 +12,7 @@ import { useNotificationStore } from '../../../stores/notification.store'
 import { useGlobalStore } from '../../../stores/global.store'
 import { useCompanyStore } from '../../../stores/company.store'
 import { handleApiError } from '../../../utils/error-handling'
+import { formatEmailList } from '../../../utils/email-list'
 import type { Customer, CreateCustomerPayload } from '../../../types/domain/customer'
 import type { Address } from '../../../types/domain/user'
 import type { ApiResponse, DeletePayload } from '../../../types/api'
@@ -33,6 +34,9 @@ export interface CustomerForm {
   name: string
   contact_name: string
   email: string
+  /** Typed lists ("a@x.com, b@y.com"); the API returns arrays, the form edits text. */
+  cc_emails: string
+  bcc_emails: string
   phone: string | null
   password: string
   confirm_password: string
@@ -70,6 +74,8 @@ function createCustomerStub(): CustomerForm {
     name: '',
     contact_name: '',
     email: '',
+    cc_emails: '',
+    bcc_emails: '',
     phone: null,
     password: '',
     confirm_password: '',
@@ -174,7 +180,10 @@ export const useCustomerStore = defineStore('customer', () => {
   async function fetchCustomer(id: number): Promise<ApiResponse<Customer>> {
     try {
       const response = await customerService.get(id)
-      Object.assign(currentCustomer.value, response.data)
+      Object.assign(currentCustomer.value, response.data, {
+        cc_emails: formatEmailList(response.data.cc_emails),
+        bcc_emails: formatEmailList(response.data.bcc_emails),
+      })
       setAddressStub(response.data as unknown as Record<string, unknown>)
       return response
     } catch (err: unknown) {

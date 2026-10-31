@@ -33,6 +33,7 @@ interface TaxTypeForm {
   percent: number
   fixed_amount: number
   compound_tax: boolean
+  is_default: boolean
   tax_category_code: TaxCategoryCode
   tax_exemption_reason: string
   description: string
@@ -71,6 +72,7 @@ const currentTaxType = ref<TaxTypeForm>({
   percent: 0,
   fixed_amount: 0,
   compound_tax: false,
+  is_default: false,
   tax_category_code: 'S',
   tax_exemption_reason: '',
   description: '',
@@ -160,6 +162,11 @@ watch(
     if (!showCompoundToggle.value) {
       currentTaxType.value.compound_tax = false
     }
+
+    // Only a sales tax can be added to new documents
+    if (currentTaxType.value.transaction_type !== 'sales') {
+      currentTaxType.value.is_default = false
+    }
   },
 )
 
@@ -188,6 +195,7 @@ async function setInitialData(): Promise<void> {
         percent: tax.percent,
         fixed_amount: tax.fixed_amount,
         compound_tax: tax.compound_tax ?? false,
+        is_default: tax.is_default ?? false,
         tax_category_code: tax.tax_category_code ?? 'S',
         tax_exemption_reason: tax.tax_exemption_reason ?? '',
         description: tax.description ?? '',
@@ -219,6 +227,7 @@ async function submitTaxTypeData(): Promise<void> {
       calculation_type: currentTaxType.value.calculation_type,
       transaction_type: currentTaxType.value.transaction_type,
       compound_tax: currentTaxType.value.compound_tax,
+      is_default: currentTaxType.value.is_default,
       tax_category_code: currentTaxType.value.tax_category_code,
       tax_exemption_reason: showExemptionReason.value
         ? currentTaxType.value.tax_exemption_reason
@@ -264,6 +273,7 @@ function resetForm(): void {
     percent: 0,
     fixed_amount: 0,
     compound_tax: false,
+  is_default: false,
     tax_category_code: 'S',
     tax_exemption_reason: '',
     description: '',
@@ -418,6 +428,15 @@ function closeTaxTypeModal(): void {
             variant="horizontal"
           >
             <BaseSwitch v-model="currentTaxType.compound_tax" />
+          </BaseInputGroup>
+
+          <BaseInputGroup
+            v-if="currentTaxType.transaction_type === 'sales'"
+            :label="$t('tax_types.is_default')"
+            :help-text="$t('tax_types.is_default_description')"
+            variant="horizontal"
+          >
+            <BaseSwitch v-model="currentTaxType.is_default" />
           </BaseInputGroup>
 
           <BaseInputGroup

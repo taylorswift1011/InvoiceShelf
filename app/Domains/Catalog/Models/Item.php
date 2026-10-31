@@ -51,6 +51,7 @@ class Item extends Model
     {
         return [
             'price' => 'integer',
+            'zero_rated' => 'boolean',
         ];
     }
 

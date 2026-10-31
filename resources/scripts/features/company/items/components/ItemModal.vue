@@ -29,6 +29,7 @@ interface ItemFormState {
   price: number
   unit_id: string | number | null
   taxes: TaxOption[]
+  zero_rated: boolean
 }
 
 const ABILITIES = {
@@ -70,6 +71,7 @@ const form = reactive<ItemFormState>({
   price: 0,
   unit_id: '',
   taxes: [],
+  zero_rated: false,
 })
 
 const nameError = computed<string>(() => {
@@ -155,6 +157,7 @@ watch(modalActive, (active) => {
     price: 0,
     unit_id: '',
     taxes: [],
+    zero_rated: false,
   })
   triedSubmit.value = false
 })
@@ -183,6 +186,7 @@ async function submitItemData(): Promise<void> {
     description: form.description,
     price: form.price,
     unit_id: form.unit_id || null,
+    zero_rated: form.zero_rated,
     taxes: (form.taxes ?? []).map((tax) => ({
       tax_type_id: tax.id,
       amount:
@@ -296,7 +300,14 @@ function closeItemModal(): void {
             </BaseInputGroup>
 
             <BaseInputGroup
-              v-if="isTaxPerItemEnabled"
+              :label="$t('items.zero_rated')"
+              :help-text="$t('items.zero_rated_description')"
+            >
+              <BaseSwitch v-model="form.zero_rated" class="flex" />
+            </BaseInputGroup>
+
+            <BaseInputGroup
+              v-if="isTaxPerItemEnabled && !form.zero_rated"
               :label="$t('items.taxes')"
             >
               <BaseMultiselect

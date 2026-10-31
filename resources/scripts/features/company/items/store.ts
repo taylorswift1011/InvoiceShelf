@@ -23,6 +23,7 @@ export interface ItemForm {
   unit: Unit | null
   taxes: Tax[]
   tax_per_item?: boolean | number | string
+  zero_rated?: boolean
   /** Definitions to answer, filled by the form. */
   customFields: CustomFieldValue[]
   /** Answers already on record, as the API returns them. */
@@ -47,6 +48,7 @@ function createItemStub(): ItemForm {
     unit: null,
     taxes: [],
     tax_per_item: false,
+    zero_rated: false,
     customFields: [],
     fields: [],
   }

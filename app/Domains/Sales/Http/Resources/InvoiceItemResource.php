@@ -30,6 +30,7 @@ class InvoiceItemResource extends JsonResource
             'description' => $item->description,
             'discount_type' => $item->discount_type,
             'price' => $item->price,
+            'zero_rated' => (bool) $item->zero_rated,
             'quantity' => $item->quantity,
             'unit_name' => $item->unit_name,
             'discount' => $item->discount,

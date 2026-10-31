@@ -41,6 +41,7 @@ class ItemsRequest extends FormRequest
             'price' => ['required'],
             'unit_id' => ['nullable'],
             'description' => ['nullable'],
+            'zero_rated' => ['sometimes', 'boolean'],
             ...$this->customFieldRules(),
         ];
     }

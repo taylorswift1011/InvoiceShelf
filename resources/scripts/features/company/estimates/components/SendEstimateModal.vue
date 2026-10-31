@@ -38,6 +38,7 @@
           </BaseInputGroup>
           <BaseInputGroup
             :label="$t('general.cc')"
+            :help-text="$t('customers.email_list_hint')"
             :error="v$.cc && v$.cc.$error && v$.cc.$errors[0].$message"
           >
             <BaseInput
@@ -50,6 +51,7 @@
           </BaseInputGroup>
           <BaseInputGroup
             :label="$t('general.bcc')"
+            :help-text="$t('customers.email_list_hint')"
             :error="v$.bcc && v$.bcc.$error && v$.bcc.$errors[0].$message"
           >
             <BaseInput
@@ -163,6 +165,7 @@
 import { ref, computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { required, email, helpers } from '@vuelidate/validators'
+import { formatEmailList, isEmailList } from '@/scripts/utils/email-list'
 import { useVuelidate } from '@vuelidate/core'
 import { useModalStore } from '../../../../stores/modal.store'
 import { useCompanyStore } from '../../../../stores/company.store'
@@ -210,10 +213,10 @@ const rules = {
     email: helpers.withMessage(t('validation.email_incorrect'), email),
   },
   cc: {
-    email: helpers.withMessage(t('validation.email_incorrect'), email),
+    emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
   },
   bcc: {
-    email: helpers.withMessage(t('validation.email_incorrect'), email),
+    emailList: helpers.withMessage(t('validation.email_list_incorrect'), isEmailList),
   },
   subject: {
     required: helpers.withMessage(t('validation.required'), required),
@@ -242,9 +245,13 @@ async function setInitialData() {
   }
 
   if (modalData.value) {
-    const customer = modalData.value.customer as Record<string, string> | undefined
+    const customer = modalData.value.customer as
+      | (Record<string, string> & { cc_emails?: string[]; bcc_emails?: string[] })
+      | undefined
     if (customer) {
       estimateMailForm.to = customer.email
+      estimateMailForm.cc = formatEmailList(customer.cc_emails) || null
+      estimateMailForm.bcc = formatEmailList(customer.bcc_emails) || null
     }
   }
 

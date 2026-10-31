@@ -2,6 +2,7 @@
 
 namespace App\Domains\Sales\Http\Requests;
 
+use App\Rules\EmailList;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -28,8 +29,9 @@ class SendEstimatesRequest extends FormRequest
             'body' => 'required',
             'from' => 'required',
             'to' => 'required',
-            'cc' => 'nullable',
-            'bcc' => 'nullable',
+            // One or more addresses, separated by commas, semicolons or line breaks
+            'cc' => ['nullable', new EmailList],
+            'bcc' => ['nullable', new EmailList],
         ];
     }
 }

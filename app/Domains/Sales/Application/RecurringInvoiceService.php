@@ -12,6 +12,7 @@ use App\Domains\Sales\Events\RecurringInvoiceFailed;
 use App\Domains\Sales\Events\RecurringInvoiceGenerated;
 use App\Domains\Sales\Models\Invoice;
 use App\Domains\Sales\Models\RecurringInvoice;
+use App\Support\Mail\RecipientList;
 use App\Support\MoneyConversion;
 use App\Support\PublicToken;
 use App\Support\Recurrence\Cadence;
@@ -382,6 +383,8 @@ class RecurringInvoiceService
                 'body' => CompanySetting::getSetting('invoice_mail_body', $recurringInvoice->company_id),
                 'from' => config('mail.from.address'),
                 'to' => $customer->email,
+                'cc' => RecipientList::format($customer->cc_emails),
+                'bcc' => RecipientList::format($customer->bcc_emails),
                 'subject' => trans('invoices')['new_invoice'],
                 'invoice' => $invoice->toArray(),
                 'customer' => $customer->toArray(),

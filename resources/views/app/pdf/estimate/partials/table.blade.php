@@ -31,7 +31,7 @@
             <td
                 class="pl-0 text-left item-cell"
             >
-                <span>{{ $item->name }}</span><br>
+                <span>{{ $item->name }}</span>@if($item->zero_rated && $estimate->tax_per_item !== 'YES') <span class="item-description">(@lang('pdf_zero_rated_label'))</span>@endif<br>
                 <span
                     class="item-description"
                 >

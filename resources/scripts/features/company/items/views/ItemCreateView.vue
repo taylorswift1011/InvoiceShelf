@@ -158,12 +158,16 @@ async function loadData(): Promise<void> {
   if (isEdit.value) {
     const id = Number(route.params.id)
     await itemStore.fetchItem(id)
-    taxPerItem.value =
+    // The item's own flag only records that taxes were attached to it, so an
+    // item saved while the company taxed whole documents has it off. Show the
+    // per-item tax controls (and the zero-rated switch) when either says so.
+    const itemTaxedPerItem =
       itemStore.currentItem.tax_per_item === 1 ||
       itemStore.currentItem.tax_per_item === '1' ||
       itemStore.currentItem.tax_per_item === true
-        ? 'YES'
-        : 'NO'
+    const companyTaxesPerItem =
+      companyStore.selectedCompanySettings.tax_per_item === 'YES'
+    taxPerItem.value = itemTaxedPerItem || companyTaxesPerItem ? 'YES' : 'NO'
   }
 
   isFetchingInitialData.value = false
@@ -302,7 +306,17 @@ async function submitItem(): Promise<void> {
           </BaseInputGroup>
 
           <BaseInputGroup
-            v-if="isTaxPerItem"
+            :label="$t('items.zero_rated')"
+            :help-text="$t('items.zero_rated_description')"
+          >
+            <BaseSwitch
+              v-model="itemStore.currentItem.zero_rated"
+              class="flex"
+            />
+          </BaseInputGroup>
+
+          <BaseInputGroup
+            v-if="isTaxPerItem && !itemStore.currentItem.zero_rated"
             :label="$t('items.taxes')"
             :content-loading="isFetchingInitialData"
           >

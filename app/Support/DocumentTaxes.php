@@ -33,7 +33,7 @@ namespace App\Support;
  * holds it, in major units (5 is 5.00), and a percentage one as a percent.
  *
  * @phpstan-type TaxRate array{tax_type_id: int, name?: string, percent: float|int|string|null, calculation_type: string|null, fixed_amount: int|null, compound_tax: bool}
- * @phpstan-type Line array{price: int, quantity: float|int, discount?: float|int, discount_type?: string, taxes?: list<TaxRate>}
+ * @phpstan-type Line array{price: int, quantity: float|int, discount?: float|int, discount_type?: string, taxes?: list<TaxRate>, zero_rated?: bool}
  */
 final class DocumentTaxes
 {
@@ -91,7 +91,12 @@ final class DocumentTaxes
         }
 
         $discountVal = self::documentDiscountVal($itemsTotal, $documentDiscount, $discountType);
-        $documentTaxes = $taxPerItem ? [] : self::chargeTaxes($taxes, $itemsTotal - $discountVal, $taxIncluded);
+        $taxableTotal = array_sum(array_map(
+            fn (array $composedLine, array $line) => empty($line['zero_rated']) ? $composedLine['total'] : 0,
+            $composed,
+            $lines,
+        ));
+        $documentTaxes = $taxPerItem ? [] : self::chargeTaxes($taxes, self::taxableBase($itemsTotal, $taxableTotal, $discountVal), $taxIncluded);
 
         $taxRows = $taxPerItem ? array_merge([], ...array_column($composed, 'taxes')) : $documentTaxes;
         $simple = self::sumAmounts($taxRows, false);
@@ -108,6 +113,25 @@ final class DocumentTaxes
                 ? $subtotalWithDiscount + $compound
                 : $subtotalWithDiscount + $simple + $compound,
         ];
+    }
+
+    /**
+     * `documentTaxBase`: what document-level taxes are charged on. Zero-rated
+     * lines are left out, together with their proportional share of the
+     * document discount. With no zero-rated line this is the discounted
+     * subtotal exactly, as it always was.
+     */
+    public static function taxableBase(int $itemsTotal, int $taxableTotal, int $discountVal): int
+    {
+        if ($taxableTotal === $itemsTotal) {
+            return $itemsTotal - $discountVal;
+        }
+
+        if ($itemsTotal === 0) {
+            return 0;
+        }
+
+        return $taxableTotal - self::round($discountVal * $taxableTotal / $itemsTotal);
     }
 
     /**
